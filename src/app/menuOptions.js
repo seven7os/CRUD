@@ -1,12 +1,18 @@
 import readline from 'readline';
-import { cadastrarUsuario, validarNome, validarEmail, validarSenha } from '../database/users.js';
+import { mudarSenhaFlow } from '../database/mudarSenhaUsuario.js';
+import { cadastrarUsuarioFlow } from '../database/cadastrarUsuario.js';
+import { logarUsuarioFlow } from '../database/logarUsuario.js';
 
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout
 });
 
-let isRunning = true;
+function ask(question) {
+  return new Promise((resolve) => {
+    rl.question(question, resolve);
+  });
+}
 
 function showMenu() {
   console.log("\nMenu de Opções:");
@@ -16,41 +22,30 @@ function showMenu() {
   console.log("4. Sair");
 }
 
-function handleMenuOption() {
-    rl.question("Escolha uma opção: ", (option) => {
-        if (option === "1") {
-            rl.question("Digite seu nome de usuário: ", (nome) => {
-                const nomeValido = validarNome(nome);
-                if (!nomeValido) {
-                    console.log("Nome inválido. O nome não pode estar vazio.");
-                    showMenu();
-                    handleMenuOption();
-                    return;
-                }
-                rl.question("Digite seu email: ", (email) => {
-                    const emailValido = validarEmail(email);
-                    if (!emailValido) {
-                        console.log("Email inválido. Por favor, insira um email válido.");
-                        showMenu();
-                        handleMenuOption();
-                        return;
-                    }
-                    rl.question("Digite sua senha: ", (senha) => {
-                        const senhaValida = validarSenha(senha);
-                        if (!senhaValida) {
-                            console.log("Senha inválida. A senha deve ter pelo menos 6 caracteres.");
-                            showMenu();
-                            handleMenuOption();
-                            return;
-                        }
-                        cadastrarUsuario(nome, email, senha);
-                        showMenu();
-                        handleMenuOption();
-                    });
-                });
-            });
-        }
-    });
+
+
+async function handleMenuOption() {
+  const option = (await ask("Escolha uma opção: ")).trim();
+
+  switch (option) {
+    case "1":
+      await cadastrarUsuarioFlow();
+      break;
+    case "2":
+      await logarUsuarioFlow();
+      break;
+    case "3":
+      await mudarSenhaFlow();
+      break;
+    case "4":
+      rl.close();
+      return;
+    default:
+      console.log("Opção inválida. Digite 1, 2, 3 ou 4.");
+  }
+
+  showMenu();
+  handleMenuOption();
 }
 
 rl.on('close', () => {
